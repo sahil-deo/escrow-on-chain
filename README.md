@@ -11,7 +11,7 @@
 
 ## Overview
 
-ChainEscrow is a decentralized escrow service built on Ethereum that enables trustless payment between two parties — a **sender** and a **receiver** — without any central intermediary. Funds are locked in a smart contract and can only be released by the sender's approval, or refunded by the receiver's consent.
+ChainEscrow is a decentralized escrow service built on Ethereum that enables trustless payment between two parties - a **sender** and a **receiver** - without any central intermediary. Funds are locked in a smart contract and can only be released by the sender's approval, or refunded by the receiver's consent.
 
 The project targets freelancers, contractors, gig workers, and anyone exchanging value with counterparties they don't fully trust yet.
 
@@ -32,7 +32,7 @@ ChainEscrow eliminates the middleman. Once a sender locks funds into the contrac
 ## How It Works
 
 1. **Sender** locks ETH into the contract, specifying the receiver's address.
-2. Funds are held in escrow — status: `Pending`.
+2. Funds are held in escrow - status: `Pending`.
 3. Once satisfied, the **sender** releases funds to the receiver.
 4. Alternatively, the **receiver** can refund the sender at any time.
 5. Status updates on-chain (`Released` or `Refunded`) and is visible to both parties.
@@ -56,9 +56,9 @@ Deployed on **Sepolia Testnet**.
 
 | Value | Meaning |
 |---|---|
-| `0` | Pending — funds are locked |
-| `1` | Released — funds sent to receiver |
-| `-1` | Refunded — funds returned to sender |
+| `0` | Pending - funds are locked |
+| `1` | Released - funds sent to receiver |
+| `-1` | Refunded - funds returned to sender |
 
 ---
 
@@ -80,9 +80,9 @@ escrow-on-chain/
 
 ### Prerequisites
 
-- [Foundry](https://book.getfoundry.sh/) — smart contract toolchain
-- [MetaMask](https://metamask.io/) — browser wallet
-- Sepolia ETH — from a faucet (e.g., [sepoliafaucet.com](https://sepoliafaucet.com))
+- [Foundry](https://book.getfoundry.sh/) - smart contract toolchain
+- [MetaMask](https://metamask.io/) - browser wallet
+- Sepolia ETH - from a faucet (e.g., [sepoliafaucet.com](https://sepoliafaucet.com))
 
 ### Deploy the Contract
 
@@ -117,7 +117,7 @@ Update the `contractAddress` variable in `index.html` with your deployed contrac
 | Layer | Technology |
 |---|---|
 | Smart Contract | Solidity ^0.8.7 |
-| Blockchain | Ethereum — Sepolia Testnet |
+| Blockchain | Ethereum - Sepolia Testnet |
 | Toolchain | Foundry (forge, cast, anvil) |
 | Frontend | HTML / CSS / Vanilla JavaScript |
 | Web3 Library | ethers.js v5 |
@@ -135,7 +135,7 @@ Update the `contractAddress` variable in `index.html` with your deployed contrac
 
 ## License
 
-MIT License — see [LICENSE](./LICENSE) for details.
+MIT License - see [LICENSE](./LICENSE) for details.
 
 ---
 
