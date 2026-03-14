@@ -191,8 +191,8 @@
             <div class="status-dot"></div>
             <span id="statusText">Not connected</span>
         </div>
-        <button id="disconnectBtn" onclick="disconnectWallet()">Disconnect</button>
-        <button id="connectBtn" onclick="connectWallet()">Connect wallet</button>
+        <button id="disconnectBtn">Disconnect</button>
+        <button id="connectBtn">Connect wallet</button>
     </div>
 </header>
 
@@ -203,8 +203,8 @@
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="switchTab('create')">New escrow</button>
-        <button class="tab" onclick="switchTab('view')">My escrows</button>
+        <button class="tab active" data-tab="create">New escrow</button>
+        <button class="tab" data-tab="view">My escrows</button>
     </div>
 
     <div class="panel active" id="panel-create">
@@ -216,10 +216,10 @@
             </div>
             <div class="field">
                 <label>Amount (ETH)</label>
-                <input type="text" id="amount" placeholder="0.01" oninput="checkEth()">
+                <input type="text" id="amount" placeholder="0.01">
                 <div class="field-hint" id="amountHint">Minimum 50,000 wei</div>
             </div>
-            <button class="btn btn-primary" id="createBtn" onclick="createEscrow()">Lock funds</button>
+            <button class="btn btn-primary" id="createBtn">Lock funds</button>
         </div>
         <div id="output">Waiting for action…</div>
     </div>
@@ -308,7 +308,7 @@
         list.innerHTML = '<div class="connect-prompt">Connect your wallet to view escrows</div>';
     }
 
-    window.connectWallet = async function () {
+    async function connectWallet() {
         try {
             if (USE_LOCAL) {
                 window.provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
@@ -328,12 +328,12 @@
         } catch (e) { setOutput("Error: " + e.message, "error"); }
     }
 
-    window.disconnectWallet = function () {
+    function disconnectWallet() {
         setDisconnectedState();
         setOutput("Wallet disconnected.");
     }
 
-    window.createEscrow = async function () {
+    async function createEscrow() {
         if (!window.provider) { setOutput("Not connected.", "error"); return; }
         const receiver = document.getElementById("receiver").value.trim();
         const amountStr = document.getElementById("amount").value.trim();
@@ -351,7 +351,7 @@
         finally { btn.disabled = false; btn.innerHTML = "Lock funds"; }
     }
 
-    window.checkEth = function () {
+    function checkEth() {
         const hint = document.getElementById("amountHint");
         const val = parseFloat(document.getElementById("amount").value);
         if (!window.ethBalance) return;
@@ -375,10 +375,13 @@
         const counterpartyAddr  = role === 'sender' ? e.receiver : e.sender;
         const roleLabel = role === 'sender' ? 'Sent' : 'Received';
 
+        // No onclick= attributes — use data- attributes; handled by delegated listener below
         const releaseBtn = isPending && role === 'sender'
-            ? `<button class="btn btn-sm btn-danger" id="release-btn-${id}" onclick="releaseEscrow('${e.receiver}',${id})">Release</button>` : '';
+            ? `<button class="btn btn-sm btn-danger" id="release-btn-${id}" data-action="release" data-receiver="${e.receiver}" data-id="${id}">Release</button>`
+            : '';
         const refundBtn = isPending && role === 'receiver'
-            ? `<button class="btn btn-sm btn-refund" id="refund-btn-${id}" onclick="refundEscrow('${e.sender}',${id})">Refund sender</button>` : '';
+            ? `<button class="btn btn-sm btn-refund" id="refund-btn-${id}" data-action="refund" data-sender="${e.sender}" data-id="${id}">Refund sender</button>`
+            : '';
         const hasActions = releaseBtn || refundBtn;
 
         return `<div class="escrow-item">
@@ -403,7 +406,7 @@
         </div>`;
     }
 
-    window.loadEscrows = async function () {
+    async function loadEscrows() {
         const list = document.getElementById("escrowList");
         if (!window.provider) { list.innerHTML = '<div class="connect-prompt">Connect your wallet to view escrows</div>'; return; }
         list.innerHTML = '<div class="empty-state"><span class="spinner"></span>Loading…</div>';
@@ -424,7 +427,7 @@
         }
     }
 
-    window.releaseEscrow = async function (receiver, id) {
+    async function releaseEscrow(receiver, id) {
         if (!window.provider) return;
         const btn = document.getElementById("release-btn-" + id);
         if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Releasing…'; }
@@ -432,14 +435,14 @@
         try {
             const tx = await window.contract.releaseEscrow(receiver, id);
             setOutput("Pending: " + tx.hash); await tx.wait(); await refreshBalance();
-            setOutput("Released ✓\n" + tx.hash, "success"); window.loadEscrows();
+            setOutput("Released ✓\n" + tx.hash, "success"); loadEscrows();
         } catch (e) {
             setOutput("Error: " + (e.reason || e.message), "error");
             if (btn) { btn.disabled = false; btn.innerHTML = "Release"; }
         }
     }
 
-    window.refundEscrow = async function (sender, id) {
+    async function refundEscrow(sender, id) {
         if (!window.provider) return;
         const btn = document.getElementById("refund-btn-" + id);
         if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Refunding…'; }
@@ -447,21 +450,39 @@
         try {
             const tx = await window.contract.refundEscrow(sender, id);
             setOutput("Pending: " + tx.hash); await tx.wait(); await refreshBalance();
-            setOutput("Refunded ✓\n" + tx.hash, "success"); window.loadEscrows();
+            setOutput("Refunded ✓\n" + tx.hash, "success"); loadEscrows();
         } catch (e) {
             setOutput("Error: " + (e.reason || e.message), "error");
             if (btn) { btn.disabled = false; btn.innerHTML = "Refund sender"; }
         }
     }
 
-    window.switchTab = function (tab) {
-        document.querySelectorAll('.tab').forEach((t, i) => {
-            t.classList.toggle('active', (i === 0 && tab === 'create') || (i === 1 && tab === 'view'));
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === tab);
         });
         document.getElementById('panel-create').classList.toggle('active', tab === 'create');
         document.getElementById('panel-view').classList.toggle('active', tab === 'view');
-        if (tab === 'view') window.loadEscrows();
+        if (tab === 'view') loadEscrows();
     }
+
+
+    document.getElementById('connectBtn').addEventListener('click', connectWallet);
+    document.getElementById('disconnectBtn').addEventListener('click', disconnectWallet);
+    document.getElementById('createBtn').addEventListener('click', createEscrow);
+    document.getElementById('amount').addEventListener('input', checkEth);
+
+    document.querySelectorAll('.tab[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    document.getElementById('escrowList').addEventListener('click', e => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const { action, receiver, sender, id } = btn.dataset;
+        if (action === 'release') releaseEscrow(receiver, id);
+        if (action === 'refund')  refundEscrow(sender, id);
+    });
 </script>
 </body>
 </html>
